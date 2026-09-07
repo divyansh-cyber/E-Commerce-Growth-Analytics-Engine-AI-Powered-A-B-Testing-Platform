@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecommerce_analytics_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ecommerce_analytics
+      POSTGRES_USER:     analyst
+      POSTGRES_PASSWORD: analyst123
+    ports:
+      - "5433:5432"        # host:container  — 5433 avoids conflict with any local PostgreSQL on 5432
+    volumes:
+      - pg_data:/var/lib/postgresql/data          # persist data across restarts
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql  # auto-run on first start
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analyst -d ecommerce_analytics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg_data:
+    driver: local
